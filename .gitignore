@@ -1,5 +1,8 @@
 # Learn more https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files
 
+# Cursor
+.cursorrules
+
 # dependencies
 node_modules/
 
@@ -31,9 +34,90 @@ yarn-error.*
 *.pem
 
 # local env files
+.env
+.env.local
+.env.development
+.env.test
+.env.production
 .env*.local
 
 # typescript
 *.tsbuildinfo
 
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+
+# testing
+coverage/
+.jest/
+__snapshots__/
+
+# Expo
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+*.orig.*
+
+# Temporary files
+*.log
+*.tmp
+.temp/
+.cache/
+
+# Build outputs
+build/
+dist/
+web-build/
+
+# Stripe
+stripe.key
+
+# Supabase
+supabase/.temp/
+.supabase/
+
+# Google Maps API
+google-maps.key
+
+# iOS
+ios/Pods/
+ios/build/
+*.pbxuser
+!default.pbxuser
+*.mode1v3
+!default.mode1v3
+*.mode2v3
+!default.mode2v3
+*.perspectivev3
+!default.perspectivev3
+xcuserdata
+*.xccheckout
+*.moved-aside
+DerivedData
+*.hmap
+*.ipa
+*.xcuserstate
+project.xcworkspace
+
+# Android
+android/app/build/
+android/build/
+android/gradle/
+android/local.properties
+android/.gradle
+android/*.iml
+android/.idea
+android/.gradle
+android/captures/
+android/local.properties
+*.keystore
+!debug.keystore
+
+# app specific
 app-example
