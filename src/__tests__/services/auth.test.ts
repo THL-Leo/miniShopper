@@ -1,46 +1,50 @@
 import { AuthService } from '../../services/auth/AuthService';
-import { SignInData, SignUpData } from '../../services/auth/types';
+import { SignInData, SignUpData, UserRole } from '../../services/auth/types';
 import { supabase } from '../../services/supabase/client';
 
 // Mock Supabase client
-jest.mock('../../services/supabase/client', () => ({
-  supabase: {
-    auth: {
-      signUp: jest.fn(),
-      signInWithPassword: jest.fn(),
-      signOut: jest.fn(),
-      getSession: jest.fn()
-    },
-    from: jest.fn(() => ({
-      insert: jest.fn(() => ({
-        select: jest.fn(() => ({
-          single: jest.fn(() => Promise.resolve({
-            data: {
-              id: 'test-user-id',
-              email: 'test@example.com',
-              name: 'Test User',
-              role: 'customer'
-            },
-            error: null
-          }))
-        }))
-      })),
-      select: jest.fn(() => ({
-        eq: jest.fn(() => ({
-          single: jest.fn(() => Promise.resolve({
-            data: {
-              id: 'test-user-id',
-              email: 'test@example.com',
-              name: 'Test User',
-              role: 'customer'
-            },
-            error: null
-          }))
-        }))
-      }))
-    }))
-  }
-}));
+jest.mock('../../services/supabase/client', () => {
+  const mockFrom = jest.fn(() => ({
+    insert: jest.fn().mockReturnValue({
+      select: jest.fn().mockReturnValue({
+        single: jest.fn().mockResolvedValue({
+          data: {
+            id: 'test-user-id',
+            email: 'test@example.com',
+            name: 'Test User',
+            role: 'customer'
+          },
+          error: null
+        })
+      })
+    }),
+    select: jest.fn().mockReturnValue({
+      eq: jest.fn().mockReturnValue({
+        single: jest.fn().mockResolvedValue({
+          data: {
+            id: 'test-user-id',
+            email: 'test@example.com',
+            name: 'Test User',
+            role: 'customer'
+          },
+          error: null
+        })
+      })
+    })
+  }));
+
+  return {
+    supabase: {
+      auth: {
+        signUp: jest.fn(),
+        signInWithPassword: jest.fn(),
+        signOut: jest.fn(),
+        getSession: jest.fn()
+      },
+      from: mockFrom
+    }
+  };
+});
 
 describe('AuthService', () => {
   let authService: AuthService;
@@ -48,7 +52,7 @@ describe('AuthService', () => {
     id: 'test-user-id',
     email: 'test@example.com',
     name: 'Test User',
-    role: 'customer' as const
+    role: 'customer' as UserRole
   };
 
   const mockSignUpData: SignUpData = {
@@ -66,6 +70,43 @@ describe('AuthService', () => {
   beforeEach(() => {
     authService = new AuthService();
     jest.clearAllMocks();
+
+    // Setup default successful responses
+    (supabase.auth.signUp as jest.Mock).mockResolvedValue({
+      data: { 
+        user: { 
+          id: mockUser.id, 
+          email: mockUser.email 
+        }, 
+        session: null 
+      },
+      error: null
+    });
+
+    (supabase.auth.signInWithPassword as jest.Mock).mockResolvedValue({
+      data: { 
+        user: { 
+          id: mockUser.id, 
+          email: mockUser.email 
+        },
+        session: { 
+          access_token: 'test-token' 
+        }
+      },
+      error: null
+    });
+
+    (supabase.auth.getSession as jest.Mock).mockResolvedValue({
+      data: {
+        session: {
+          user: { 
+            id: mockUser.id, 
+            email: mockUser.email 
+          }
+        }
+      },
+      error: null
+    });
   });
 
   describe('signUp', () => {
@@ -191,6 +232,56 @@ describe('AuthService', () => {
 
       expect(result.success).toBe(true);
       expect(result.user).toBeUndefined();
+    });
+  });
+
+  describe('signUpWithEmail', () => {
+    it('should create user account successfully', async () => {
+      (supabase.auth.signUp as jest.Mock).mockResolvedValue({
+        data: { 
+          user: { 
+            id: mockUser.id, 
+            email: mockUser.email 
+          }, 
+          session: null 
+        },
+        error: null,
+      });
+
+      (supabase.from as jest.Mock).mockReturnValue({
+        insert: jest.fn().mockResolvedValue({ error: null }),
+      });
+
+      const result = await authService.signUpWithEmail(
+        mockUser.email,
+        'password123',
+        mockUser.name,
+        mockUser.role
+      );
+
+      expect(result.success).toBe(true);
+      expect(result.user).toEqual(mockUser);
+      expect(supabase.auth.signUp).toHaveBeenCalledWith({
+        email: mockUser.email,
+        password: 'password123',
+      });
+    });
+
+    it('should handle signup errors', async () => {
+      (supabase.auth.signUp as jest.Mock).mockResolvedValue({
+        data: { user: null, session: null },
+        error: { message: 'Email already exists' },
+      });
+
+      const result = await authService.signUpWithEmail(
+        mockUser.email,
+        'password123',
+        mockUser.name,
+        mockUser.role
+      );
+
+      expect(result.success).toBe(false);
+      expect(result.error).toBe('Email already exists');
     });
   });
 }); 

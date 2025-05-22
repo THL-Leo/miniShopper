@@ -1,3 +1,4 @@
+import { UserRole } from '../../types/auth';
 import { supabase } from '../supabase/client';
 import { AuthResult, SignInData, SignUpData, User } from './types';
 
@@ -133,6 +134,56 @@ export class AuthService {
         success: false,
         error: error instanceof Error ? error.message : 'An unknown error occurred'
       };
+    }
+  }
+
+  async signUpWithEmail(
+    email: string,
+    password: string,
+    name: string,
+    role: UserRole
+  ): Promise<AuthResult> {
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+      });
+
+      if (error) {
+        return { success: false, error: error.message };
+      }
+
+      if (data.user) {
+        // Create profile in profiles table
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .insert([
+            {
+              id: data.user.id,
+              email: data.user.email,
+              name,
+              role,
+            },
+          ]);
+
+        if (profileError) {
+          return { success: false, error: profileError.message };
+        }
+
+        return { 
+          success: true, 
+          user: {
+            id: data.user.id,
+            email: data.user.email!,
+            name,
+            role,
+          }
+        };
+      }
+
+      return { success: false, error: 'Unknown error occurred' };
+    } catch (error) {
+      return { success: false, error: error instanceof Error ? error.message : 'Unknown error occurred' };
     }
   }
 } 

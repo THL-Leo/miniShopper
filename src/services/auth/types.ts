@@ -1,4 +1,4 @@
-export type UserRole = 'customer' | 'store_owner' | 'admin';
+import { UserRole } from '../../types/auth';
 
 export interface User {
   id: string;
@@ -32,4 +32,7 @@ export interface AuthState {
   user: User | null;
   isLoading: boolean;
   error: string | null;
-} 
+}
+
+// Re-export auth types for convenience
+export * from '../../types/auth';
