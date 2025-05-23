@@ -20,6 +20,12 @@ export default {
       infoPlist: {
         NSLocationWhenInUseUsageDescription: 'Find nearby stores on MiniShoppers',
         NSCameraUsageDescription: 'Scan QR codes to order from local stores'
+      },
+      config: {
+        usesAppleSignIn: true,
+        googleSignIn: {
+          reservedClientId: process.env.GOOGLE_IOS_CLIENT_ID
+        }
       }
     },
     android: {
@@ -31,16 +37,32 @@ export default {
       permissions: [
         'ACCESS_FINE_LOCATION',
         'CAMERA'
-      ]
+      ],
+      config: {
+        googleSignIn: {
+          apiKey: process.env.GOOGLE_ANDROID_API_KEY,
+          certificateHash: process.env.GOOGLE_ANDROID_CERT_HASH
+        }
+      }
     },
     plugins: [
       'expo-location',
       'expo-camera',
-      '@stripe/stripe-react-native'
+      'expo-web-browser',
+      [
+        'expo-apple-authentication'
+      ]
     ],
+    scheme: 'minishoppers',
     extra: {
       supabaseUrl: process.env.SUPABASE_URL,
       supabaseAnonKey: process.env.SUPABASE_ANON_KEY,
+      googleClientIds: {
+        ios: process.env.GOOGLE_IOS_CLIENT_ID,
+        android: process.env.GOOGLE_ANDROID_CLIENT_ID,
+        expo: process.env.GOOGLE_EXPO_CLIENT_ID,
+        web: process.env.GOOGLE_WEB_CLIENT_ID
+      },
       eas: {
         projectId: 'your-project-id'
       }

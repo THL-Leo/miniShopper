@@ -121,3 +121,6 @@ android/local.properties
 
 # app specific
 app-example
+
+# setup instructions
+GOOGLE_OAUTH_SETUP.md
